@@ -73,10 +73,13 @@ async function createPhoto(filename) {
 
     try {
       console.time(`download ${sh3d}`)
-      await download(
-        `https://d1uvym69u0pmlm.cloudfront.net/sweethome/${sh3d}`,
-        fullPathSh3d
-      )
+      // await download(
+      //   `https://d1uvym69u0pmlm.cloudfront.net/sweethome/${sh3d}`,
+      //   fullPathSh3d
+      // )
+
+      execSync(`aws s3 cp s3://zigbang-zed/sweethome/${sh3d} ./sh3d/`)
+
       console.timeEnd(`download ${sh3d}`)
 
       console.time(`create image with ${sh3d}`)
@@ -89,6 +92,10 @@ async function createPhoto(filename) {
 
       execSync(createPhotoCmd)
       console.timeEnd(`create image with ${sh3d}`)
+
+      execSync(
+        `aws s3 cp ./output/${danjiId}_${roomTypeId}.png s3://zigbang-zed/floor_plan/`
+      )
     } catch (e) {
       console.error(sh3d, e)
     } finally {
