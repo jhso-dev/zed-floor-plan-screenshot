@@ -2,7 +2,7 @@ const fs = require("fs")
 const https = require("https")
 const path = require("path")
 const readlines = require("n-readlines")
-const { execSync } = require("child_process")
+const { execSync, exec } = require("child_process")
 
 function download(url, dest) {
   return new Promise((resolve, reject) => {
@@ -50,6 +50,12 @@ function download(url, dest) {
 async function createPhoto(filename) {
   const rl = new readlines(filename)
 
+  try {
+    exec("Xvfb :99 -screen 0 1024x768x24 &")
+  } catch (e) {
+    console.error(e)
+  }
+
   let isFirstLine = true
   let line
   while ((line = rl.next())) {
@@ -75,7 +81,6 @@ async function createPhoto(filename) {
 
       console.time(`create image with ${sh3d}`)
       const createPhotoCmd = `
-        Xvfb :99 -screen 0 1024x768x24 & \
         java -jar photo-creator-all.jar \
         -o ${fullPathOutput} \
         --transparent \
@@ -98,6 +103,12 @@ async function createPhoto(filename) {
         }
       )
     }
+  }
+
+  try {
+    exec("killall Xvfb")
+  } catch (e) {
+    console.error(e)
   }
 }
 
