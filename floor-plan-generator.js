@@ -85,7 +85,7 @@ async function createPhoto(filename) {
 
       console.time(`create image with ${sh3d}`)
       const createPhotoCmd = `
-        java -jar photo-creator-all-2.jar \
+        java -jar photo-creator-all-3.jar \
         -o ${fullPathOutput} \
         --transparent \
         --disable-exclude-furnitures \
