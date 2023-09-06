@@ -64,8 +64,8 @@ async function createPhoto(filename) {
       continue
     }
     const row = line.toString("utf-8").split(",")
-    const danjiId = row[1]
-    const roomTypeId = row[2]
+    const danjiId = row[0]
+    const roomTypeId = row[1]
     const sh3d = `${danjiId}_${roomTypeId}.sh3d`
     const fullPathSh3d = path.resolve(__dirname, `sh3d/${sh3d}`)
     const fullPathOutput = path.resolve(__dirname, `output`)
