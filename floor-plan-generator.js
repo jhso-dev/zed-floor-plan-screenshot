@@ -96,8 +96,10 @@ async function createPhoto(filename) {
       execSync(
         `aws s3 cp ./output/${danjiId}_${roomTypeId}.png s3://zigbang-zed/floor_plan/`
       )
+      execSync(`echo "${sh3d}" >> success.txt`)
     } catch (e) {
       console.error(sh3d, e)
+      execSync(`echo "${sh3d} ${e}" >> error.txt`)
     } finally {
       fs.unlink(fullPathSh3d, (err) => {
         console.log(`remove ${fullPathSh3d}`)
