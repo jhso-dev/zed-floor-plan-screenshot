@@ -51,6 +51,7 @@ async function createPhoto(filename) {
   const rl = new readlines(filename)
 
   try {
+    exec("export DISPLAY=:99")
     exec("Xvfb :99 -screen 0 1024x768x24 &")
   } catch (e) {
     console.error(e)
