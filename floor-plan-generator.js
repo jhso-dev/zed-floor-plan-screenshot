@@ -65,7 +65,7 @@ function upload(tempFolder, destFile, sh3d) {
         })
 
         if (!pngFilesWithWhite?.length) {
-          fs.rmSync(fullPathDanjiWithRoomTypeIdOutput, {
+          fs.rmSync(tempFolder, {
             recursive: true,
             force: true,
           })
@@ -86,7 +86,7 @@ function upload(tempFolder, destFile, sh3d) {
             )
             execSync(`echo "${sh3d}" >> success.txt`)
 
-            fs.rmSync(fullPathDanjiWithRoomTypeIdOutput, {
+            fs.rmSync(tempFolder, {
               recursive: true,
               force: true,
             })
@@ -96,7 +96,7 @@ function upload(tempFolder, destFile, sh3d) {
             console.error(e)
             execSync(`echo "${sh3d} ${e}" >> error.txt`)
 
-            fs.rmSync(fullPathDanjiWithRoomTypeIdOutput, {
+            fs.rmSync(tempFolder, {
               recursive: true,
               force: true,
             })
