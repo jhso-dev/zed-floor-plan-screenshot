@@ -47,6 +47,50 @@ function download(url, dest) {
   })
 }
 
+function upload(tempFolder, destFile, sh3d) {
+  return new Promise((resolve, reject) => {
+    fs.readdir(tempFolder, (err, files) => {
+      if (err) {
+        console.error("Can't read folder:", err)
+        reject()
+        return
+      }
+
+      const pngFilesWithWhite = files.filter((file) => {
+        return (
+          !file.toLowerCase().includes("white") &&
+          path.extname(file).toLowerCase() === ".png"
+        )
+      })
+
+      pngFilesWithWhite.forEach((file) => {
+        try {
+          execSync(`mv ${tempFolder}/${file} ${destFile}`)
+          console.log(`mv ${tempFolder}/${file} ${destFile}`)
+          execSync("sleep 0.5")
+          console.log("sleep 0.5")
+          execSync(`aws s3 cp ${destFile} s3://zigbang-zed/floor_plan_third/`)
+          console.log(
+            `aws s3 cp ${destFile} s3://zigbang-zed/floor_plan_third/`
+          )
+          execSync(`echo "${sh3d}" >> success.txt`)
+
+          fs.rmSync(tempFolder, {
+            recursive: true,
+            force: true,
+          })
+
+          resolve()
+        } catch (e) {
+          console.error(e)
+          execSync(`echo "${sh3d} ${e}" >> error.txt`)
+          reject()
+        }
+      })
+    })
+  })
+}
+
 async function createPhoto(filename) {
   const rl = new readlines(filename)
 
@@ -98,43 +142,12 @@ async function createPhoto(filename) {
 
       execSync("sleep 1")
 
-      fs.readdir(fullPathDanjiWithRoomTypeIdOutput, (err, files) => {
-        if (err) {
-          console.error("Can't read folder:", err)
-          return
-        }
-
-        const pngFilesWithWhite = files.filter((file) => {
-          return (
-            !file.toLowerCase().includes("white") &&
-            path.extname(file).toLowerCase() === ".png"
-          )
-        })
-
-        pngFilesWithWhite.forEach((file) => {
-          try {
-            execSync(
-              `mv ${fullPathDanjiWithRoomTypeIdOutput}/${file} ${fullPathOutput}/${danjiIdWithRoomTypeId}.png`
-            )
-
-            execSync("sleep 0.5")
-
-            execSync(
-              `aws s3 cp ${fullPathOutput}/${danjiIdWithRoomTypeId}.png s3://zigbang-zed/floor_plan_third/`
-            )
-
-            execSync(`echo "${sh3d}" >> success.txt`)
-
-            fs.rmSync(fullPathDanjiWithRoomTypeIdOutput, {
-              recursive: true,
-              force: true,
-            })
-          } catch (e) {
-            console.error(e)
-            execSync(`echo "${sh3d} ${e}" >> error.txt`)
-          }
-        })
-      })
+      console.time(`upload with ${sh3d}`)
+      await upload(
+        fullPathDanjiWithRoomTypeIdOutput,
+        `${fullPathOutput}/${danjiIdWithRoomTypeId}.png`,
+        sh3d
+      )
     } catch (e) {
       console.error(sh3d, e)
       execSync(`echo "${sh3d} ${e}" >> error.txt`)
@@ -142,6 +155,7 @@ async function createPhoto(filename) {
       fs.unlink(fullPathSh3d, (err) => {
         console.log(`remove ${fullPathSh3d}`)
       })
+      console.timeEnd(`upload with ${sh3d}`)
     }
   }
 
