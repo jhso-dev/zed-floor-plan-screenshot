@@ -64,6 +64,11 @@ function upload(tempFolder, destFile, sh3d) {
           )
         })
 
+        if (!pngFilesWithWhite?.length) {
+          reject("file is not exist")
+          return
+        }
+
         pngFilesWithWhite.forEach((file) => {
           try {
             execSync(`mv ${tempFolder}/${file} ${destFile}`)
@@ -89,8 +94,6 @@ function upload(tempFolder, destFile, sh3d) {
           }
         })
       })
-
-      reject("file is not exist")
     } catch (e) {
       console.error(e)
       reject(e)
