@@ -67,9 +67,11 @@ async function createPhoto(filename) {
     const row = line.toString("utf-8").split(",")
     const danjiId = row[0]
     const roomTypeId = row[1]
-    const sh3d = `${danjiId}_${roomTypeId}.sh3d`
+    const danjiIdWithRoomTypeId = `${danjiId}_${roomTypeId}`
+    const sh3d = `${danjiIdWithRoomTypeId}.sh3d`
     const fullPathSh3d = path.resolve(__dirname, `sh3d/${sh3d}`)
     const fullPathOutput = path.resolve(__dirname, `output`)
+    const fullPathDanjiWithRoomTypeIdOutput = `${fullPathOutput}/${danjiIdWithRoomTypeId}`
     console.log(`>>> start with ${sh3d}`)
 
     try {
@@ -86,7 +88,7 @@ async function createPhoto(filename) {
       console.time(`create image with ${sh3d}`)
       const createPhotoCmd = `
         java -jar photo-creator-all-3.jar \
-        -o ${fullPathOutput} \
+        -o ${fullPathDanjiWithRoomTypeIdOutput} \
         --transparent \
         --disable-exclude-furnitures \
         ${fullPathSh3d}`
@@ -94,10 +96,45 @@ async function createPhoto(filename) {
       execSync(createPhotoCmd)
       console.timeEnd(`create image with ${sh3d}`)
 
-      execSync(
-        `aws s3 cp ./output/${danjiId}_${roomTypeId}.png s3://zigbang-zed/floor_plan/`
-      )
-      execSync(`echo "${sh3d}" >> success.txt`)
+      execSync("sleep 1")
+
+      fs.readdir(fullPathDanjiWithRoomTypeIdOutput, (err, files) => {
+        if (err) {
+          console.error("Can't read folder:", err)
+          return
+        }
+
+        const pngFilesWithWhite = files.filter((file) => {
+          return (
+            !file.toLowerCase().includes("white") &&
+            path.extname(file).toLowerCase() === ".png"
+          )
+        })
+
+        pngFilesWithWhite.forEach((file) => {
+          try {
+            execSync(
+              `mv ${fullPathDanjiWithRoomTypeIdOutput}/${file} ${fullPathOutput}/${danjiIdWithRoomTypeId}.png`
+            )
+
+            execSync("sleep 0.5")
+
+            execSync(
+              `aws s3 cp ${fullPathOutput}/${danjiIdWithRoomTypeId}.png s3://zigbang-zed/floor_plan_third/`
+            )
+
+            execSync(`echo "${sh3d}" >> success.txt`)
+
+            fs.rmSync(fullPathDanjiWithRoomTypeIdOutput, {
+              recursive: true,
+              force: true,
+            })
+          } catch (e) {
+            console.error(e)
+            execSync(`echo "${sh3d} ${e}" >> error.txt`)
+          }
+        })
+      })
     } catch (e) {
       console.error(sh3d, e)
       execSync(`echo "${sh3d} ${e}" >> error.txt`)
@@ -105,13 +142,6 @@ async function createPhoto(filename) {
       fs.unlink(fullPathSh3d, (err) => {
         console.log(`remove ${fullPathSh3d}`)
       })
-
-      fs.unlink(
-        `${fullPathOutput}/${danjiId}_${roomTypeId}_white.png`,
-        (err) => {
-          console.log(`remove ${danjiId}_${roomTypeId}_white.png`)
-        }
-      )
     }
   }
 
