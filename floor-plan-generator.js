@@ -81,11 +81,6 @@ function upload(tempFolder, destFile, sh3d) {
             )
             execSync(`echo "${sh3d}" >> success.txt`)
 
-            fs.rmSync(tempFolder, {
-              recursive: true,
-              force: true,
-            })
-
             resolve()
           } catch (e) {
             console.error(e)
@@ -165,6 +160,11 @@ async function createPhoto(filename) {
     } finally {
       fs.unlink(fullPathSh3d, (err) => {
         console.log(`remove ${fullPathSh3d}`)
+      })
+
+      fs.rmSync(fullPathDanjiWithRoomTypeIdOutput, {
+        recursive: true,
+        force: true,
       })
       console.timeEnd(`upload with ${sh3d}`)
     }
