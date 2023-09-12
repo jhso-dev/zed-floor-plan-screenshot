@@ -49,45 +49,50 @@ function download(url, dest) {
 
 function upload(tempFolder, destFile, sh3d) {
   return new Promise((resolve, reject) => {
-    fs.readdir(tempFolder, (err, files) => {
-      if (err) {
-        console.error("Can't read folder:", err)
-        reject()
-        return
-      }
-
-      const pngFilesWithWhite = files.filter((file) => {
-        return (
-          !file.toLowerCase().includes("white") &&
-          path.extname(file).toLowerCase() === ".png"
-        )
-      })
-
-      pngFilesWithWhite.forEach((file) => {
-        try {
-          execSync(`mv ${tempFolder}/${file} ${destFile}`)
-          console.log(`mv ${tempFolder}/${file} ${destFile}`)
-          execSync("sleep 0.5")
-          console.log("sleep 0.5")
-          execSync(`aws s3 cp ${destFile} s3://zigbang-zed/floor_plan_third/`)
-          console.log(
-            `aws s3 cp ${destFile} s3://zigbang-zed/floor_plan_third/`
-          )
-          execSync(`echo "${sh3d}" >> success.txt`)
-
-          fs.rmSync(tempFolder, {
-            recursive: true,
-            force: true,
-          })
-
-          resolve()
-        } catch (e) {
-          console.error(e)
-          execSync(`echo "${sh3d} ${e}" >> error.txt`)
+    try {
+      fs.readdir(tempFolder, (err, files) => {
+        if (err) {
+          console.error("Can't read folder:", err)
           reject()
+          return
         }
+
+        const pngFilesWithWhite = files.filter((file) => {
+          return (
+            !file.toLowerCase().includes("white") &&
+            path.extname(file).toLowerCase() === ".png"
+          )
+        })
+
+        pngFilesWithWhite.forEach((file) => {
+          try {
+            execSync(`mv ${tempFolder}/${file} ${destFile}`)
+            console.log(`mv ${tempFolder}/${file} ${destFile}`)
+            execSync("sleep 0.5")
+            console.log("sleep 0.5")
+            execSync(`aws s3 cp ${destFile} s3://zigbang-zed/floor_plan_third/`)
+            console.log(
+              `aws s3 cp ${destFile} s3://zigbang-zed/floor_plan_third/`
+            )
+            execSync(`echo "${sh3d}" >> success.txt`)
+
+            fs.rmSync(tempFolder, {
+              recursive: true,
+              force: true,
+            })
+
+            resolve()
+          } catch (e) {
+            console.error(e)
+            execSync(`echo "${sh3d} ${e}" >> error.txt`)
+            reject()
+          }
+        })
       })
-    })
+    } catch (e) {
+      console.error(e)
+      reject()
+    }
   })
 }
 
@@ -142,6 +147,7 @@ async function createPhoto(filename) {
 
       execSync("sleep 1")
 
+      console.log("start upload")
       console.time(`upload with ${sh3d}`)
       await upload(
         fullPathDanjiWithRoomTypeIdOutput,
