@@ -65,6 +65,11 @@ function upload(tempFolder, destFile, sh3d) {
         })
 
         if (!pngFilesWithWhite?.length) {
+          fs.rmSync(fullPathDanjiWithRoomTypeIdOutput, {
+            recursive: true,
+            force: true,
+          })
+
           reject("file is not exist")
           return
         }
@@ -81,10 +86,20 @@ function upload(tempFolder, destFile, sh3d) {
             )
             execSync(`echo "${sh3d}" >> success.txt`)
 
+            fs.rmSync(fullPathDanjiWithRoomTypeIdOutput, {
+              recursive: true,
+              force: true,
+            })
+
             resolve()
           } catch (e) {
             console.error(e)
             execSync(`echo "${sh3d} ${e}" >> error.txt`)
+
+            fs.rmSync(fullPathDanjiWithRoomTypeIdOutput, {
+              recursive: true,
+              force: true,
+            })
             reject(e)
           }
         })
@@ -160,11 +175,6 @@ async function createPhoto(filename) {
     } finally {
       fs.unlink(fullPathSh3d, (err) => {
         console.log(`remove ${fullPathSh3d}`)
-      })
-
-      fs.rmSync(fullPathDanjiWithRoomTypeIdOutput, {
-        recursive: true,
-        force: true,
       })
       console.timeEnd(`upload with ${sh3d}`)
     }
