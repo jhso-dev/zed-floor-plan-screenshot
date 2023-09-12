@@ -53,7 +53,7 @@ function upload(tempFolder, destFile, sh3d) {
       fs.readdir(tempFolder, (err, files) => {
         if (err) {
           console.error("Can't read folder:", err)
-          reject()
+          reject(e)
           return
         }
 
@@ -85,13 +85,15 @@ function upload(tempFolder, destFile, sh3d) {
           } catch (e) {
             console.error(e)
             execSync(`echo "${sh3d} ${e}" >> error.txt`)
-            reject()
+            reject(e)
           }
         })
       })
+
+      reject("file is not exist")
     } catch (e) {
       console.error(e)
-      reject()
+      reject(e)
     }
   })
 }
